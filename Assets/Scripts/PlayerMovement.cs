@@ -5,13 +5,18 @@ using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
+  [SerializeField] float runSpeed = 5f;
+  [SerializeField] float jumpSpeed = 5f;
   Vector2 moveInput;
   Rigidbody2D myRigidbody;
-  [SerializeField] float runSpeed = 5f;
+  Animator myAnimator;
+  CapsuleCollider2D myCollider;
 
   void Awake()
   {
     myRigidbody = GetComponent<Rigidbody2D>();
+    myAnimator = GetComponent<Animator>();
+    myCollider = GetComponent<CapsuleCollider2D>();
   }
 
   void Update()
@@ -25,16 +30,28 @@ public class PlayerMovement : MonoBehaviour
     moveInput = value.Get<Vector2>();
   }
 
+  void OnJump(InputValue value)
+  {
+    if (myCollider.IsTouchingLayers(LayerMask.GetMask("Ground")))
+    {
+      if (value.isPressed)
+      {
+        myRigidbody.velocity += new Vector2(0f, jumpSpeed);
+      }
+    }
+  }
+
   void Run()
   {
     Vector2 playerVelocity = new Vector2(moveInput.x * runSpeed, myRigidbody.velocity.y);
     myRigidbody.velocity = playerVelocity;
+    bool playerHasHorizontalSpeed = Mathf.Abs(myRigidbody.velocity.x) > Mathf.Epsilon;
+    myAnimator.SetBool("isRunning", playerHasHorizontalSpeed);
   }
 
   void FlipSprite()
   {
     bool playerHasHorizontalSpeed = Mathf.Abs(myRigidbody.velocity.x) > Mathf.Epsilon;
-
     if (playerHasHorizontalSpeed)
     {
       transform.localScale = new Vector2(Mathf.Sign(myRigidbody.velocity.x), 1f);
